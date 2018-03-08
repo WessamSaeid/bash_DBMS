@@ -19,22 +19,90 @@ showDB(){
   echo "======================="
 }
 
+datatypeSelect(){
+  typeloop=1
+  while [ $typeloop -eq 1 ]
+  do
+  echo "1-datatype is string"
+  echo "2-datatype is number"
+  read -p "choose the datatype of $colName column ,enter the number of your choice : " colType
+  case $colType in
+  1)
+    echo -e -n ":string" >> ./database/$dbName/$tableName/meta_$tableName
+    typeloop=0
+    ;;
+
+  2)
+    echo -e -n ":number" >> ./database/$dbName/$tableName/meta_$tableName
+    typeloop=0
+    ;;
+  *)
+    echo "wrong entry please try again"
+    datatypeSelect
+    ;;
+  esac
+done
+}
+
+constraintSelect(){
+  primaryloop=1
+  while [ $primaryloop -eq 1 ]
+  do
+    echo "1-primary key"
+    echo "2-not a primary key"
+    read -p "for $colName column ,enter the number of your choice : " colprimary
+    case $colprimary in
+    1)
+      echo -e ":pk" >> ./database/$dbName/$tableName/meta_$tableName
+      primaryloop=0
+      ;;
+
+    2)
+      echo -e -n ":" >> ./database/$dbName/$tableName/meta_$tableName
+      read -p "Is $colName column must have unique values y/n: " unique
+      if [[ $unique = "y" ]]
+      then
+        echo -e -n ":unique" >> ./database/$dbName/$tableName/meta_$tableName
+      else
+        echo -e -n ":" >> ./database/$dbName/$tableName/meta_$tableName
+      fi
+      read -p "Is $colName column can accept null values y/n: " nullvalue
+      if [ $nullvalue = "y" ]
+      then
+        echo -e ":null" >> ./database/$dbName/$tableName/meta_$tableName
+      else
+        echo -e ":notnull" >> ./database/$dbName/$tableName/meta_$tableName
+      fi
+      primaryloop=0
+      ;;
+
+    *)
+      echo "wrong entry please try again"
+      constraintSelect
+      ;;
+    esac
+  done
+}
+
 createTable(){
   read -p "enter table name : " tableName
-  if [ -f ./database/$dbName/$tableName ]
+  if [ -d ./database/$dbName/$tableName ]
   then
     echo "this name is already exists please try again"
     createTable
   else
-    touch ./database/$dbName/$tableName
-    read -p "enter the primary key column name : " primarycol
-    read -p "enter the number of columns  : " colNum
+    mkdir ./database/$dbName/$tableName
+    touch ./database/$dbName/$tableName/meta_$tableName
+    touch ./database/$dbName/$tableName/data_$tableName
+    #read -p "enter the primary key column name : " primarycol
+    read -p "enter the number of columns : " colNum
 
     for i in $(seq $colNum)
     do
-      read -p "enter the name of column $i" colName
-      read -p "enter the type of $colName column " colType
-      
+      read -p "enter the name of column $i : " colName
+      echo -n $colName >> ./database/$dbName/$tableName/meta_$tableName
+      datatypeSelect
+      constraintSelect
     done
     echo "$tableName table is created successfully"
     echo "========================================="
@@ -53,27 +121,27 @@ useDB(){
     while [ $loop -eq 1 ]
     do
     echo "===================="
-    echo "20-show tables"
-    echo "21-create new table"
-    echo "22-alter table"
-    echo "30-back"
+    echo "1-show tables"
+    echo "2-create new table"
+    echo "3-alter table"
+    echo "00-back"
 
 
     read -p "enter your choice: " choice
 
     case $choice in
-    20)
+    1)
       echo "======================="
       echo "existing tables :"
       echo $(ls ./database/$dbName)
       echo "======================="
       ;;
 
-    21)
+    2)
       createTable
       ;;
 
-    30)
+    00)
       loop=0
       ;;
 
@@ -86,13 +154,13 @@ useDB(){
 
 }
 
-trap 'echo "signal is trapped "' 2 20
+#trap 'echo "signal is trapped "' 2 20
 while true
 do
 echo "========================"
 echo "1-create new database"
 echo "2-use database"
-echo "3-exit"
+echo "0-exit"
 
 read -p "enter your choice: " choice
 
@@ -105,7 +173,7 @@ case $choice in
   useDB
   ;;
 
-3)
+0)
   break
   ;;
 
