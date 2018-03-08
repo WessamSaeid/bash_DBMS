@@ -83,6 +83,21 @@ constraintSelect(){
     esac
   done
 }
+displaytable(){
+   read -p "enter the name of table you want to  display  its discription" tableName
+  if [ ! -d ./database/$dbName/$tableName ]
+    then
+    echo "not a valid existing table name please try again "
+    displaytable
+  else
+  echo "======================================="
+  echo "discription of table $tableName"
+  cat ./database/$dbName/$tableName/meta_$tableName
+  
+
+  fi
+
+}
 droptable(){
   read -p "enter the name of table you want to drop" tableName
   if [ ! -d ./database/$dbName/$tableName ]
@@ -310,8 +325,9 @@ useDB(){
     echo "1-show tables"
     echo "2-create new table"
     echo "3-insert record"
-    echo "4.drop table "
-    echo "5.alter table"
+    echo "4-drop table "
+    echo "5-alter table"
+    echo "6- display discription of  a table"
     echo "00-back"
 
 
@@ -348,6 +364,14 @@ useDB(){
 
     5)
      alterTable
+     ;;
+
+    6)
+      echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+     displaytable
      ;;
 
     00)
