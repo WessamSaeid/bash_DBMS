@@ -83,6 +83,19 @@ constraintSelect(){
     esac
   done
 }
+droptable(){
+  read -p "enter the name of table you want to drop" tableName
+  if [ ! -d ./database/$dbName/$tableName ]
+    then
+    echo "not a valid existing table name please try again "
+    droptable
+  else
+  rm -r ./database/$dbName/$tableName
+  echo " existing $tableName is deleted "
+
+  fi
+
+}
 alterTable(){
   showTables
   read -p "enter the table name that you want to alter : " tableName
@@ -126,6 +139,8 @@ alterTable(){
       read -p "enter the name of column to be deleted  : " colName
       sed '/'$colName'/d' ./database/$dbName/$tableName/meta_$tableName >> ./database/$dbName/$tableName/meta_$tableName
       ;;
+
+  
 
     00)
       alterloop=0
@@ -295,7 +310,7 @@ useDB(){
     echo "1-show tables"
     echo "2-create new table"
     echo "3-insert record"
-    echo "4.drop a table "
+    echo "4.drop table "
     echo "5.alter table"
     echo "00-back"
 
@@ -324,7 +339,11 @@ useDB(){
      ;;
 
     4)
-     echo "lessa"
+      echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+      droptable
      ;;
 
     5)
