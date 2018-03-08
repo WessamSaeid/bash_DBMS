@@ -19,6 +19,13 @@ showDB(){
   echo "======================="
 }
 
+showTables(){
+  echo "======================="
+  echo "existing tables :"
+  echo $(ls ./database/$dbName)
+  echo "======================="
+}
+
 datatypeSelect(){
   typeloop=1
   while [ $typeloop -eq 1 ]
@@ -109,6 +116,62 @@ createTable(){
   fi
 }
 
+alterTable(){
+  showTables
+  read -p "enter the table name that you want to alter : " tableName
+  if [ ! -d ./database/$dbName/$tableName ]
+  then
+    echo "not a valid existing table name please try again "
+    alterTable
+  else
+    alterloop=1
+    while [ $alterloop -eq 1 ]
+    do
+    echo "===================="
+    echo "1-change table name"
+    echo "2-add new column"
+    echo "3-change datatype of a certain column"
+    echo "4-delete column"
+    echo "00-back"
+
+
+    read -p "enter your choice: " choice
+
+    case $choice in
+    1)
+      read -p "enter new name : " newtableName
+      mv ./database/$dbName/$tableName/meta_$tableName ./database/$dbName/$tableName/meta_$newtableName
+      mv ./database/$dbName/$tableName/data_$tableName ./database/$dbName/$tableName/data_$newtableName
+      mv ./database/$dbName/$tableName ./database/$dbName/$newtableName
+      tableName=$newtableName
+      echo "table is renamed successfully"
+      ;;
+
+    2)
+      read -p "enter the name of the new column  : " colName
+      echo -n $colName >> ./database/$dbName/$tableName/meta_$tableName
+      datatypeSelect
+      constraintSelect
+      echo "$colName column is added to $tableName successfully"
+      ;;
+
+    4)
+      read -p "enter the name of column to be deleted  : " colName
+      sed '/'$colName'/d' ./database/$dbName/$tableName/meta_$tableName >> ./database/$dbName/$tableName/meta_$tableName
+      ;;
+
+    00)
+      alterloop=0
+      ;;
+
+    *)
+      echo wrong entry
+      ;;
+    esac
+    done
+  fi
+}
+
 useDB(){
   showDB
   read -p "enter the database you want to use : " dbName
@@ -131,14 +194,15 @@ useDB(){
 
     case $choice in
     1)
-      echo "======================="
-      echo "existing tables :"
-      echo $(ls ./database/$dbName)
-      echo "======================="
+      showTables
       ;;
 
     2)
       createTable
+      ;;
+
+    3)
+      alterTable
       ;;
 
     00)
@@ -154,12 +218,26 @@ useDB(){
 
 }
 
+dropDB(){
+  showDB
+  read -p "enter the database you want to delete : " dbName
+  if [ ! -d ./database/$dbName ]
+  then
+    echo "not a valid existing database name please try again "
+    dropDB
+  else
+    rm -r ./database/$dbName
+    echo "$dbName is deleted sucessfully"
+  fi
+}
+
 #trap 'echo "signal is trapped "' 2 20
 while true
 do
 echo "========================"
 echo "1-create new database"
 echo "2-use database"
+echo "3-drop database"
 echo "0-exit"
 
 read -p "enter your choice: " choice
@@ -171,6 +249,10 @@ case $choice in
 
 2)
   useDB
+  ;;
+
+3)
+  dropDB
   ;;
 
 0)
