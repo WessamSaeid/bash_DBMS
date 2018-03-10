@@ -251,8 +251,8 @@ checkfourthfield(){
           then
           if [[ "$firstfieldval" != "" ]]
             then
-            exists=$(awk 'BEGIN {FS=":"} {print $j}' ./database/$dbName/$tableName/data_$tableName)
-            echo $exists
+            exists=$(awk -v col=$col 'BEGIN { FS = ":" } {print $col}' ./database/$dbName/$tableName/data_$tableName)
+
             if [[ $exists = "" ]]
               then
                echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
@@ -308,7 +308,12 @@ if [[ "$fifthfield" != null ]]
       echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
    fi
 else
-   echo -n -e "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+   if [[ $sixtfield != "" ]]
+   then
+   echo -n -e "$sixtfield" >> ./database/$dbName/$tableName/data_$tableName
+  else
+    echo -n -e "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+  fi
 
 fi
 
@@ -321,6 +326,7 @@ checkConstrains(){
     thirdfield=$(echo "$j" | cut -d ":" -f 3)
     fourthfield=$(echo "$j" | cut -d ":" -f 4)
     fifthfield=$(echo "$j" | cut -d ":" -f 5)
+    sixtfield=$(echo "$j" | cut -d ":" -f 6)
     read -p "enter value of $firstfield" firstfieldval
     if [[ "$secondfield" = number ]]
     then
@@ -345,7 +351,7 @@ checkConstrains(){
     fi
 }
 insertRecord(){
-
+  col=0
   read -p "enter table name : " tableName
   if [ ! -d ./database/$dbName/$tableName ]
   then
@@ -356,7 +362,10 @@ insertRecord(){
     echo $num
     for j in `cat ./database/$dbName/$tableName/meta_$tableName `
     do
+     ((col++))
      checkConstrains
+
+
     done
      echo -e "" >> ./database/$dbName/$tableName/data_$tableName
 
