@@ -170,20 +170,44 @@ alterTable(){
 }
 
 checkthirdfield(){
+  flag=1
 
     if [[ "$thirdfield" = pk ]]
            then
            if [[ "$firstfieldval" != "" ]]
             then
-            exists=$(grep -o $firstfieldval ./database/$dbName/$tableName/data_$tableName)
+            exists=$(awk 'BEGIN {FS=":"} {print $1}' ./database/$dbName/$tableName/data_$tableName)
+            
             if [[ $exists = "" ]]
               then
                echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
                echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
             else
-              echo "duplicated value ,must be unique"
-              checkConstrains
+            for i in $exists
+            do
+              
+              if [ $i == $firstfieldval ]
+                then
+                 echo "duplicated value ,must be unique"
+                 checkConstrains
+                 flag=1
+                 break
+              else 
+                flag=0
+              fi
+            done
+            if [[ $flag = 0 ]]
+              then
+               echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+               echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
+
+            fi
+
+
+
            fi
+              
+           
           else
             echo "error ! must be a not NULL"
             checkConstrains
@@ -199,19 +223,45 @@ checkfourthfield(){
           then
           if [[ "$firstfieldval" != "" ]]
             then
-            exists=$(grep -o $firstfieldval ./database/$dbName/$tableName/data_$tableName)
+            exists=$(awk 'BEGIN {FS=":"} {print $j}' ./database/$dbName/$tableName/data_$tableName)
+            echo $exists
             if [[ $exists = "" ]]
               then
-               echo  -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
-               echo  -n ":" >> ./database/$dbName/$tableName/data_$tableName
+               echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+               echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
             else
-              echo "duplicated value ,must be unique"
-              checkConstrains
+            for i in $exists
+            do
+              
+              if [ $i == $firstfieldval ]
+                then
+                 echo "duplicated value ,must be unique"
+                 checkConstrains
+                 flag=1
+                 break
+              else 
+                flag=0
+              fi
+            done
+            if [[ $flag = 0 ]]
+              then
+               echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+               echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
+
             fi
+
+
+
+           fi
+              
+           
           else
             
             checkfifthfield
          fi
+          
+
+         
   else
     checkfifthfield
   fi
@@ -280,7 +330,7 @@ insertRecord(){
     do
      checkConstrains 
     done
-   
+     echo -e "" >> ./database/$dbName/$tableName/data_$tableName
 
   fi
 }

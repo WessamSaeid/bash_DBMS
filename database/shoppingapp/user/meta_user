@@ -1,4 +1,0 @@
-id:number:pk
-name:string:::notnull
-username:string::unique:notnull
-email:string::unique:null
