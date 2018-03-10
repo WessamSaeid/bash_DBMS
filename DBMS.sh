@@ -19,6 +19,13 @@ showDB(){
   echo "======================="
 }
 
+showTables(){
+  echo "======================="
+  echo "existing tables :"
+  echo $(ls ./database/$dbName)
+  echo "======================="
+}
+
 datatypeSelect(){
   typeloop=1
   while [ $typeloop -eq 1 ]
@@ -56,7 +63,15 @@ constraintSelect(){
       read -p "Is $colName column can accept null values y/n: " nullvalue
       if [ $nullvalue = "y" ]
       then
-        echo -e ":null" >> ./database/$dbName/$tableName/meta_$tableName
+        echo -e -n ":null" >> ./database/$dbName/$tableName/meta_$tableName
+        read -p "Is $colName column have default value y/n: " defaultvalue
+        if [ $defaultvalue = "y" ]
+        then
+          read -p "enter the default value: " default
+          echo -e ":$default" >> ./database/$dbName/$tableName/meta_$tableName
+        else
+          echo -e ":" >> ./database/$dbName/$tableName/meta_$tableName
+        fi
       else
         echo -e ":notnull" >> ./database/$dbName/$tableName/meta_$tableName
       fi
@@ -73,7 +88,6 @@ createTable(){
     mkdir ./database/$dbName/$tableName
     touch ./database/$dbName/$tableName/meta_$tableName
     touch ./database/$dbName/$tableName/data_$tableName
-    #read -p "enter the primary key column name : " primarycol
     read -p "enter the number of columns : " colNum
 
     for i in $(seq $colNum)
@@ -97,14 +111,14 @@ createTable(){
 }
 
 displaytable(){
-   read -p "enter the name of table you want to  display  its discription" tableName
+   read -p "enter the name of table you want to  display  its description : " tableName
   if [ ! -d ./database/$dbName/$tableName ]
     then
     echo "not a valid existing table name please try again "
     displaytable
   else
   echo "======================================="
-  echo "discription of table $tableName"
+  echo "description of $tableName table"
   cat ./database/$dbName/$tableName/meta_$tableName
 
 
@@ -112,14 +126,14 @@ displaytable(){
 
 }
 droptable(){
-  read -p "enter the name of table you want to drop" tableName
+  read -p "enter the name of table you want to drop : " tableName
   if [ ! -d ./database/$dbName/$tableName ]
     then
     echo "not a valid existing table name please try again "
     droptable
   else
   rm -r ./database/$dbName/$tableName
-  echo " existing $tableName is deleted "
+  echo "$tableName table is deleted "
 
   fi
 
@@ -165,6 +179,7 @@ alterTable(){
 
     4)
       read -p "enter the name of column to be deleted  : " colName
+      #rm  ./database/$dbName/$tableName/meta_$tableName
       sed '/'$colName'/d' ./database/$dbName/$tableName/meta_$tableName >> ./database/$dbName/$tableName/meta_$tableName
       ;;
 
@@ -364,10 +379,10 @@ useDB(){
     echo "===================="
     echo "1-show tables"
     echo "2-create new table"
-    echo "3-insert record"
+    echo "3-alter table"
     echo "4-drop table "
-    echo "5-alter table"
-    echo "6- display discription of  a table"
+    echo "5-display description of a table"
+    echo "6-insert record"
     echo "00-back"
 
 
@@ -375,10 +390,7 @@ useDB(){
 
     case $choice in
     1)
-      echo "======================="
-      echo "existing tables :"
-      echo $(ls ./database/$dbName)
-      echo "======================="
+      showTables
       ;;
 
     2)
@@ -386,32 +398,22 @@ useDB(){
       ;;
 
     3)
-      echo "======================="
-      echo "existing Tables :"
-      echo $(ls ./database/$dbName)
-      echo "======================="
-
-     insertRecord
-     ;;
+       alterTable
+       ;;
 
     4)
-      echo "======================="
-      echo "existing tables :"
-      echo $(ls ./database/$dbName)
-      echo "======================="
-      droptable
-     ;;
+       showTables
+       droptable
+        ;;
 
     5)
-     alterTable
-     ;;
+      showTables
+      displaytable
+      ;;
 
     6)
-      echo "======================="
-      echo "existing tables :"
-      echo $(ls ./database/$dbName)
-      echo "======================="
-     displaytable
+      showTables
+     insertRecord
      ;;
 
     00)
@@ -426,6 +428,7 @@ useDB(){
   fi
 
 }
+
 dropDB(){
   showDB
   read -p "enter the database you want to delete : " dbName
