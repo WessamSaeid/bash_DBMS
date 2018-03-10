@@ -231,7 +231,7 @@ if [[ "$fifthfield" != null ]]
    fi
 else
    echo -n -e "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
-   echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
+  # echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
 fi
 
 }
@@ -279,8 +279,9 @@ insertRecord(){
     for j in `cat ./database/$dbName/$tableName/meta_$tableName `
     do
      checkConstrains 
+    
     done
-   
+   echo -e "\n" >> ./database/$dbName/$tableName/data_$tableName
 
   fi
 }
@@ -310,6 +311,123 @@ createTable(){
   fi
 }
 
+selectrecord(){
+
+ read -p "enter table name : " tableName
+ if [ ! -d ./database/$dbName/$tableName ]
+ then
+    echo "this name is not exists please try again"
+    selectrecord
+ else 
+ 	echo "1-to select by one field "
+ 	echo "2-to select by more than one field"
+ 	echo "3-to select all fields "
+ 	echo "4-to select the whole table"
+ 	read -p "enter your choice: " selectRec
+
+ 	case $selectRec in
+
+ 		1) 
+			echo "Which field do you want to select?"
+			awk 'BEGIN { FS = ":" ; OFS=" " } {print NR "-to select by " $1":"}' ./database/$dbName/$tableName/meta_$tableName
+			read -p "enter your choice: " selectField
+			if grep -q  $selectField "./database/$dbName/$tableName/data_$tableName"
+			then 
+			read -p "please enter the word you want to search for:" selectWord
+			egrep $selectWord  ./database/$dbName/$tableName/data_$tableName | cut -d ":" -f$selectField 
+			else 
+			echo "result not found"
+			fi
+			;;	
+
+   		2) 
+			
+			awk 'BEGIN { FS = ":" ; OFS=" " } {print NR "-to select by " $1":"}' ./database/$dbName/$tableName/meta_$tableName
+			echo "Please enter the fields you want to enter ex 2,3,4"
+			read -p "enter your choice: "  fieldNum
+			read -p "please enter the word you want to search for:" selectWord
+			egrep $selectWord  ./database/$dbName/$tableName/data_$tableName | cut -d ":" -f$fieldNum | tr ':' ' '
+       echo "Do you want to print the result?"
+      echo "1-To print using HTML"
+      echo "2-To print using CSV"
+      echo "0-To exit without printing"
+      read -p "enter your choice: " choiceP
+      case $choiceP in 
+
+
+        1) 
+          egrep $selectWord  ./database/$dbName/$tableName/data_$tableName | cut -d ":" -f$fieldNum > ./database/$dbName/$tableName/myfile
+          awk 'BEGIN {FS = ":" ; print "<table border=3px >" }
+          NR == 1{
+              print "<tr>"
+              tag = "th"
+          }
+          NR != 1{
+              print "<tr>"
+              tag = "td"
+          }
+          {
+              for(i=1; i<=NF; ++i) print "<" tag " width=\"" widths[i] "\">" $i "</" tag ">"
+              print "</tr>"
+          }
+          END { print "</table>"}' ./database/$dbName/$tableName/myfile > ./database/$dbName/$tableName/tablehtml.html
+          echo "Printed successfully!"
+              ;;
+
+        2)
+          egrep $selectWord  ./database/$dbName/$tableName/data_$tableName | cut -d ":" -f$fieldNum > ./database/$dbName/$tableName/myfile
+          awk  ' BEGIN {FS = ":"} { for (i=1;i<=NF;i++) printf ("%s%c", $i, i+1 <= NF ? "," : "\n"); }' < ./database/$dbName/$tableName/myfile > ./database/$dbName/$tableName/testfile.csv 
+
+          ;;
+
+        0)
+          break
+          ;;  
+
+
+  
+      esac
+			;;	
+
+	
+		3)
+			read -p "please enter the word you want to search for:" selectRec
+			if grep -q  $selectRec "./database/$dbName/$tableName/data_$tableName"
+			then 
+			egrep $selectRec  ./database/$dbName/$tableName/data_$tableName | tr ':' ' ' 
+			
+			else 
+				echo "result not found"
+			fi
+			;;
+
+
+		4)
+
+			cat ./database/$dbName/$tableName/data_$tableName | tr ':' ' '
+
+			;;
+    esac
+
+
+    # awk 'BEGIN {FS = ":" ; print "<table border=3px >" }{ print "<tr><td>" $1 "</td><td>" $2 "</td><td>" $3 "</td><td>" $4 "</td><td>" 	$5 "</td><td>" $6 "</td><td>" $7 "</td></tr>" }
+    #  END   { print "</table>" }' ./database/$dbName/$tableName/data_$tableName/myfile
+
+
+
+
+
+	
+ fi
+
+
+
+
+
+
+
+}
+
 useDB(){
   showDB
   read -p "enter the database you want to use : " dbName
@@ -327,7 +445,10 @@ useDB(){
     echo "3-insert record"
     echo "4-drop table "
     echo "5-alter table"
-    echo "6- display discription of  a table"
+    echo "6-display description of  a table"
+    echo "7-select a certain record"
+    echo "8-edit a certain record"
+    echo "9-sort table"
     echo "00-back"
 
 
@@ -373,6 +494,14 @@ useDB(){
       echo "======================="
      displaytable
      ;;
+
+    7)
+	  echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+      selectrecord
+      ;;
 
     00)
       loop=0
