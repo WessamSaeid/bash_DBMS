@@ -372,17 +372,167 @@ insertRecord(){
   fi
 }
 
+selecttable(){
+read -p "enter table name :" tableName
+if [ ! -d ./database/$dbName/$tableName ]
+  then 
+  echo "this name is not exists please try again "
+  selecttable
+else
+  deleterecord
 
+fi
 
-useDB(){
-  showDB
-  read -p "enter the database you want to use : " dbName
-  if [ ! -d ./database/$dbName ]
-  then
-    echo "not a valid existing database name please try again "
-    useDB
+}
+deleterecord(){
+
+  array=()
+  arrayval=()
+
+  fields=$(awk 'BEGIN {FS=":"} {print $1}' ./database/$dbName/$tableName/meta_$tableName)
+  echo "delete from $tableName where (condition)"
+  echo "=============================="
+  echo " existing fields "
+  echo "$fields"
+  echo "=============================="
+  read -p "enter the name of field you want to use to delete record" selectedfield
+  
+  for x in $fields
+  do
+    echo $x
+   if [[ $x = "$selectedfield" ]]
+      then
+      
+      read -p "enter the value of $selectedfield : " selectedfieldvalue
+      
+      echo "delete from $tableName where $selectedfield = $selectedfieldvalue "
+      lines=$(sed -n "/$selectedfieldvalue/p" ./database/$dbName/$tableName/data_$tableName)
+      echo $lines
+      break 
+      
+    else
+      echo "error ! this field dosen't exists "
+      echo " "
+      deleteoptions
+    fi 
+
+  done 
+
+  if [[ $lines != "" ]]
+    then
+    numVal=$(cat ./database/$dbName/$tableName/meta_$tableName | wc -l)
+    leastCol=$(( $numVal - 1 ))
+    for i in $(seq $leastCol)
+    do
+      read -p "you want add 'and' condition y/n ?" yn
+      if [[ $yn = y ]]
+        then
+        echo "delete from $tableName where (condition)"
+        echo "=============================="
+        echo " existing fields "
+        echo "$fields"
+        echo "=============================="
+        read -p "enter the name of field you want to and to delete record" selectedfieldforand
+  
+      for k in $fields
+      do
+      echo 
+      if [[ k=selectedfieldforand ]]
+      then
+      
+      read -p "enter the value of $selectedfieldforand : " selectedfieldvalueforand
+      array+=("$selectedfieldforand")
+      arrayval+=("$selectedfieldvalueforand")
+      break
+
+      else
+      echo "error ! this field dosen't exists "
+      deleteoptions
+      fi
+
+      done 
+
+      elif [[ $yn = n ]]
+        then
+        if [[ ${array[@]} = "" ]]
+          then
+        cp ./database/$dbName/$tableName/data_$tableName ./database/$dbName/$tableName/datatwo_$tableName
+        echo -n "" >./database/$dbName/$tableName/data_$tableName
+        sed  "/$selectedfieldvalue/d" ./database/$dbName/$tableName/datatwo_$tableName >>./database/$dbName/$tableName/data_$tableName
+        echo -n "" >./database/$dbName/$tableName/datatwo_$tableName
+        echo "delete records "
+        break
+
+      else
+        deletefunction
+      fi
+      else
+        echo "wrong input,start chose delete conditions again! "
+        deleterecord
+     fi
+    done
+   
   else
-    loop=1
+    echo " can't delete ! $selectedfieldvalue is not found "
+    options
+  fi
+
+}
+
+deletefunction(){
+ flagdelete=0
+  echo -n "$lines" > ./database/$dbName/$tableName/datathree_$tableName
+  catlines=$(cat ./database/$dbName/$tableName/datathree_$tableName | wc -l )
+if [[ $catlines=1 ]]
+  then 
+   
+   for i in ${arrayval[@]}
+    do
+      deleteline=$(sed -n "/$i/p" ./database/$dbName/$tableName/datathree_$tableName)
+      if [[ $deleteline = "" ]]
+       then
+       flagdelete=0
+       echo "cant delete that record ,no such record is matched "
+       break 
+      else
+       flagdelete=1
+  
+      fi
+    done
+   if [[ $flagdelete = 1 ]]
+   then 
+         cp ./database/$dbName/$tableName/data_$tableName ./database/$dbName/$tableName/datatwo_$tableName
+        echo -n "" >./database/$dbName/$tableName/data_$tableName
+        sed  "/$selectedfieldvalue/d" ./database/$dbName/$tableName/datatwo_$tableName >>./database/$dbName/$tableName/data_$tableName
+        echo -n "" >./database/$dbName/$tableName/datatwo_$tableName
+        echo "delete records "
+        
+   fi
+else
+    echo "hdwr b values w field"
+fi 
+
+  
+
+
+
+}
+
+
+deleteoptions(){
+
+  
+  echo "=============================="
+  echo " existing fields "
+  echo "$fields"
+  echo "=============================="
+  read -p "enter the name of field you want to use to delete record" selectedfield
+
+}
+
+options(){
+
+ loop=1
     while [ $loop -eq 1 ]
     do
     echo "===================="
@@ -392,6 +542,7 @@ useDB(){
     echo "4-drop table "
     echo "5-display description of a table"
     echo "6-insert record"
+    echo "7-delete  record"
     echo "00-back"
 
 
@@ -424,8 +575,12 @@ useDB(){
       showTables
      insertRecord
      ;;
+   7)
+     showTables
+     selecttable
+     ;;
 
-    00)
+   00)
       loop=0
       ;;
 
@@ -434,6 +589,20 @@ useDB(){
       ;;
     esac
     done
+
+}
+
+
+
+useDB(){
+  showDB
+  read -p "enter the database you want to use : " dbName
+  if [ ! -d ./database/$dbName ]
+  then
+    echo "not a valid existing database name please try again "
+    useDB
+  else
+   options
   fi
 
 }
