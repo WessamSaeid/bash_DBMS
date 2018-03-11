@@ -1,0 +1,3 @@
+id1:string:pk
+username:string::unique:notnull:
+email:string:::null:
