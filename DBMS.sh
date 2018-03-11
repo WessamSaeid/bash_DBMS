@@ -749,35 +749,38 @@ sortrecord(){
     sortrecord
     else 
     echo "Which field do you want to select?"
-    awk 'BEGIN { FS = ":" ; OFS=" " } {print NR "-to select by " $1":"}' ./database/$dbName/$tableName/meta_$tableName 
-    read -p "enter the number of your choice: " fieldnumber
+    awk 'BEGIN { FS = ":" ; OFS=" " } {print $1":"}' ./database/$dbName/$tableName/meta_$tableName 
     read -p "enter the name of your choice: " selectField
     echo "1-to sort ascend​ingly"
     echo "2-to sort descendingly"
     read -p "enter your choice: " sortorder
-
+    
     fieldtype=$(grep $selectField ./database/$dbName/$tableName/meta_$tableName | cut -d ":" -f2)
+
+    num=$(awk -v col_name=$selectField 'BEGIN{ FS = ":"}{ if( $1 == col_name ){ print NR } }' ./database/$dbName/$tableName/meta_$tableName)
   
+	echo $num 
+
     if [[ "$fieldtype" = number ]]
     then
       case $sortorder in
         1)
-        cat ./database/$dbName/$tableName/data_$tableName | sort -n -t ":" -k$fieldnumber | tr ':' ' '
+        cat ./database/$dbName/$tableName/data_$tableName | sort -n -t ":" -k$num | tr ':' ' '
         ;;
 
         2)
-          cat ./database/$dbName/$tableName/data_$tableName | sort -nr -t ":" -k$fieldnumber | tr ':' ' '
+          cat ./database/$dbName/$tableName/data_$tableName | sort -nr -t ":" -k$num | tr ':' ' '
         ;;
 
         esac
     else 
         case $sortorder in
         1)
-        cat ./database/$dbName/$tableName/data_$tableName | sort -t ":" -k$fieldnumber | tr ':' ' '
+        cat ./database/$dbName/$tableName/data_$tableName | sort -t ":" -k$num | tr ':' ' '
         ;;
 
         2)
-          cat ./database/$dbName/$tableName/data_$tableName | sort -r -t ":" -k$fieldnumber | tr ':' ' '
+          cat ./database/$dbName/$tableName/data_$tableName | sort -r -t ":" -k$num | tr ':' ' '
         ;;
 
         esac
@@ -792,6 +795,24 @@ fi
 
 }
 
+editrecord(){
+read -p "enter table name : " tableName
+#  if [ ! -d ./database/$dbName/$tableName ]
+#  then
+#     echo "this name is not exists please try again"
+#     selectrecord
+#  else
+
+
+
+
+
+
+
+
+# fi
+
+}
 
 selectrecord(){
 
@@ -1086,6 +1107,11 @@ options(){
     8)
       showTables
       sortrecord
+    ;;
+
+    9)
+      showTables
+      editrecord
     ;;
 
    10)
