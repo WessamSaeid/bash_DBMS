@@ -581,7 +581,7 @@ checkConstrains(){
        
 
       row=$(awk -v col_value=$selectField 'BEGIN{ FS = ":"; NR=0 }{ if( NR == col_value ){ print $0 } }' ./database/$dbName/$tableName/meta_$tableName)
-      echo "$row"
+      
           firstfield=$(echo "$row" | cut -d ":" -f 1)
           secondfield=$(echo "$row" | cut -d ":" -f 2)
           thirdfield=$(echo "$row" | cut -d ":" -f 3)
@@ -674,7 +674,7 @@ deleterecord(){
        echo "delete from $tableName where $selectedfield = $selectedfieldvalue "
 
       lines=$(awk -v  numm=$num -v col_value=$selectedfieldvalue 'BEGIN{ FS = ":"}{ if( $numm == col_value ){ print $0 } }' ./database/$dbName/$tableName/data_$tableName)
-      echo $lines
+      
       
       flagdosentexist=1
       break
@@ -809,12 +809,21 @@ read -p "enter table name : " tableName
      		awk 'BEGIN { FS = ":" ; OFS=" " } {print NR "-to select by " $1":"}' ./database/$dbName/$tableName/meta_$tableName
       		read -p "enter your choice: " wherechoice
       		read -p "where condition:" wherecond
-			awk -v selfield=$selectField -v nrec=$newrecord -v wchoice=$wherechoice -v wcond=$wherecond 'BEGIN { FS=":" ; OFS= ":" } $wchoice==wcond{$selfield=nrec}1' ./database/$dbName/$tableName/data_$tableName > ./database/$dbName/$tableName/tmp && mv  ./database/$dbName/$tableName/tmp ./database/$dbName/$tableName/data_$tableName
-			;;
+     
+			
+      
+			
+       awk -v selfield=$selectField -v nrec=$newrecord -v wchoice=$wherechoice -v wcond=$wherecond 'BEGIN { FS=":" ; OFS= ":" } $wchoice==wcond{$selfield=nrec}1' ./database/$dbName/$tableName/data_$tableName > ./database/$dbName/$tableName/tmp && mv  ./database/$dbName/$tableName/tmp ./database/$dbName/$tableName/data_$tableName 
+        echo "check datafile to see changes "
+      
+      ;;
 
     	2) 
+      
 			awk -v selfield=$selectField -v nrec=$newrecord  'BEGIN { FS=":" ; OFS= ":" } {$selfield=nrec}1' ./database/$dbName/$tableName/data_$tableName > ./database/$dbName/$tableName/tmp && mv  ./database/$dbName/$tableName/tmp ./database/$dbName/$tableName/data_$tableName
-			;;
+			echo "check datafile to see changes "
+      
+      ;;
 
 		*)
 			echo "wrong enty"
