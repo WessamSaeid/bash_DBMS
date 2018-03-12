@@ -19,13 +19,6 @@ showDB(){
   echo "======================="
 }
 
-showTables(){
-  echo "======================="
-  echo "existing tables :"
-  echo $(ls ./database/$dbName)
-  echo "======================="
-}
-
 datatypeSelect(){
   typeloop=1
   while [ $typeloop -eq 1 ]
@@ -52,6 +45,19 @@ done
 }
 
 constraintSelect(){
+  primaryloop=1
+  while [ $primaryloop -eq 1 ]
+  do
+    echo "1-primary key"
+    echo "2-not a primary key"
+    read -p "for $colName column ,enter the number of your choice : " colprimary
+    case $colprimary in
+    1)
+      echo -e ":pk" >> ./database/$dbName/$tableName/meta_$tableName
+      primaryloop=0
+      ;;
+
+    2)
       echo -e -n ":" >> ./database/$dbName/$tableName/meta_$tableName
       read -p "Is $colName column must have unique values y/n: " unique
       if [[ $unique = "y" ]]
@@ -63,77 +69,44 @@ constraintSelect(){
       read -p "Is $colName column can accept null values y/n: " nullvalue
       if [ $nullvalue = "y" ]
       then
-        echo -e -n ":null" >> ./database/$dbName/$tableName/meta_$tableName
-        read -p "Is $colName column have default value y/n: " defaultvalue
-        if [ $defaultvalue = "y" ]
-        then
-          read -p "enter the default value: " default
-          echo -e ":$default" >> ./database/$dbName/$tableName/meta_$tableName
-        else
-          echo -e ":" >> ./database/$dbName/$tableName/meta_$tableName
-        fi
+        echo -e ":null" >> ./database/$dbName/$tableName/meta_$tableName
       else
         echo -e ":notnull" >> ./database/$dbName/$tableName/meta_$tableName
       fi
+      primaryloop=0
+      ;;
 
+    *)
+      echo "wrong entry please try again"
+      constraintSelect
+      ;;
+    esac
+  done
 }
-
-createTable(){
-  read -p "enter table name : " tableName
-  if [ -d ./database/$dbName/$tableName ]
-  then
-    echo "this name is already exists please try again"
-    createTable
-  else
-    mkdir ./database/$dbName/$tableName
-    touch ./database/$dbName/$tableName/meta_$tableName
-    touch ./database/$dbName/$tableName/data_$tableName
-    read -p "enter the number of columns : " colNum
-
-    for i in $(seq $colNum)
-    do
-      if [[ i -eq 1 ]]
-      then
-        read -p "enter the name of the primary key column : " colName
-        echo -n $colName >> ./database/$dbName/$tableName/meta_$tableName
-        datatypeSelect
-        echo -e ":pk" >> ./database/$dbName/$tableName/meta_$tableName
-      else
-        read -p "enter the name of column $i : " colName
-        echo -n $colName >> ./database/$dbName/$tableName/meta_$tableName
-        datatypeSelect
-        constraintSelect
-      fi
-    done
-    echo "$tableName table is created successfully"
-    echo "========================================="
-  fi
-}
-
 displaytable(){
-   read -p "enter the name of table you want to  display  its description : " tableName
+   read -p "enter the name of table you want to  display  its discription" tableName
   if [ ! -d ./database/$dbName/$tableName ]
     then
     echo "not a valid existing table name please try again "
     displaytable
   else
   echo "======================================="
-  echo "description of $tableName table"
+  echo "discription of table $tableName"
   cat ./database/$dbName/$tableName/meta_$tableName
-
+  
 
   fi
 
 }
 droptable(){
-  read -p "enter the name of table you want to drop : " tableName
+  read -p "enter the name of table you want to drop" tableName
   if [ ! -d ./database/$dbName/$tableName ]
     then
     echo "not a valid existing table name please try again "
     droptable
   else
   rm -r ./database/$dbName/$tableName
-  echo "$tableName table is deleted "
+  echo " existing $tableName is deleted "
 
   fi
 
@@ -179,11 +152,10 @@ alterTable(){
 
     4)
       read -p "enter the name of column to be deleted  : " colName
-      #rm  ./database/$dbName/$tableName/meta_$tableName
       sed '/'$colName'/d' ./database/$dbName/$tableName/meta_$tableName >> ./database/$dbName/$tableName/meta_$tableName
       ;;
 
-
+  
 
     00)
       alterloop=0
@@ -205,7 +177,7 @@ checkthirdfield(){
            if [[ "$firstfieldval" != "" ]]
             then
             exists=$(awk 'BEGIN {FS=":"} {print $1}' ./database/$dbName/$tableName/data_$tableName)
-
+            
             if [[ $exists = "" ]]
               then
                echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
@@ -213,14 +185,14 @@ checkthirdfield(){
             else
             for i in $exists
             do
-
+              
               if [ $i == $firstfieldval ]
                 then
                  echo "duplicated value ,must be unique"
                  checkConstrains
                  flag=1
                  break
-              else
+              else 
                 flag=0
               fi
             done
@@ -234,8 +206,8 @@ checkthirdfield(){
 
 
            fi
-
-
+              
+           
           else
             echo "error ! must be a not NULL"
             checkConstrains
@@ -251,8 +223,8 @@ checkfourthfield(){
           then
           if [[ "$firstfieldval" != "" ]]
             then
-            exists=$(awk -v col=$col 'BEGIN { FS = ":" } {print $col}' ./database/$dbName/$tableName/data_$tableName)
-
+            exists=$(awk 'BEGIN {FS=":"} {print $j}' ./database/$dbName/$tableName/data_$tableName)
+            echo $exists
             if [[ $exists = "" ]]
               then
                echo -n "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
@@ -260,14 +232,14 @@ checkfourthfield(){
             else
             for i in $exists
             do
-
+              
               if [ $i == $firstfieldval ]
                 then
                  echo "duplicated value ,must be unique"
                  checkConstrains
                  flag=1
                  break
-              else
+              else 
                 flag=0
               fi
             done
@@ -281,15 +253,15 @@ checkfourthfield(){
 
 
            fi
-
-
+              
+           
           else
-
+            
             checkfifthfield
          fi
+          
 
-
-
+         
   else
     checkfifthfield
   fi
@@ -308,30 +280,24 @@ if [[ "$fifthfield" != null ]]
       echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
    fi
 else
-   if [[ $sixtfield != "" ]]
-   then
-   echo -n -e "$sixtfield" >> ./database/$dbName/$tableName/data_$tableName
-  else
-    echo -n -e "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
-  fi
-
+   echo -n -e "$firstfieldval" >> ./database/$dbName/$tableName/data_$tableName
+   echo -n ":" >> ./database/$dbName/$tableName/data_$tableName
 fi
 
 }
 
 checkConstrains(){
-
+     
     firstfield=$(echo "$j" | cut -d ":" -f 1)
     secondfield=$(echo "$j" | cut -d ":" -f 2)
     thirdfield=$(echo "$j" | cut -d ":" -f 3)
     fourthfield=$(echo "$j" | cut -d ":" -f 4)
     fifthfield=$(echo "$j" | cut -d ":" -f 5)
-    sixtfield=$(echo "$j" | cut -d ":" -f 6)
     read -p "enter value of $firstfield" firstfieldval
     if [[ "$secondfield" = number ]]
-    then
+    then 
        if [[ "$firstfieldval" =~ ^[0-9]+$  || "$firstfieldval" =~ ^$ ]]
-        then
+        then 
          checkthirdfield
        else
         echo "invalid for $firstfield"
@@ -342,7 +308,7 @@ checkConstrains(){
     if [[ "$secondfield" = string ]]
     then
       if [[ "$firstfieldval" =~ ^[a-zA-Z]+ || "$firstfieldval" =~ ^$ ]]
-       then
+       then 
         checkthirdfield
       else
         echo "invalid for $firstfield"
@@ -351,248 +317,48 @@ checkConstrains(){
     fi
 }
 insertRecord(){
-  col=0
+
   read -p "enter table name : " tableName
   if [ ! -d ./database/$dbName/$tableName ]
   then
     echo "this name is not exists please try again"
     insertRecord
-  else
+  else 
     num= cat ./database/$dbName/$tableName/meta_$tableName | wc -l
     echo $num
     for j in `cat ./database/$dbName/$tableName/meta_$tableName `
     do
-     ((col++))
-     checkConstrains
-
-
+     checkConstrains 
     done
      echo -e "" >> ./database/$dbName/$tableName/data_$tableName
 
   fi
 }
 
-selecttable(){
-read -p "enter table name :" tableName
-if [ ! -d ./database/$dbName/$tableName ]
-  then 
-  echo "this name is not exists please try again "
-  selecttable
-else
-  deleterecord
-
-fi
-
-}
-deleterecord(){
-
-  array=()
-  arrayval=()
-
-  fields=$(awk 'BEGIN {FS=":"} {print $1}' ./database/$dbName/$tableName/meta_$tableName)
-  echo "delete from $tableName where (condition)"
-  echo "=============================="
-  echo " existing fields "
-  echo "$fields"
-  echo "=============================="
-  read -p "enter the name of field you want to use to delete record" selectedfield
-  
-  for x in $fields
-  do
-    echo $x
-   if [[ $x = "$selectedfield" ]]
-      then
-      
-      read -p "enter the value of $selectedfield : " selectedfieldvalue
-      
-      echo "delete from $tableName where $selectedfield = $selectedfieldvalue "
-      lines=$(sed -n "/$selectedfieldvalue/p" ./database/$dbName/$tableName/data_$tableName)
-      echo $lines
-      break 
-      
-    else
-      echo "error ! this field dosen't exists "
-      echo " "
-      deleteoptions
-    fi 
-
-  done 
-
-  if [[ $lines != "" ]]
-    then
-    numVal=$(cat ./database/$dbName/$tableName/meta_$tableName | wc -l)
-    leastCol=$(( $numVal - 1 ))
-    for i in $(seq $leastCol)
-    do
-      read -p "you want add 'and' condition y/n ?" yn
-      if [[ $yn = y ]]
-        then
-        echo "delete from $tableName where (condition)"
-        echo "=============================="
-        echo " existing fields "
-        echo "$fields"
-        echo "=============================="
-        read -p "enter the name of field you want to and to delete record" selectedfieldforand
-  
-      for k in $fields
-      do
-      echo 
-      if [[ k=selectedfieldforand ]]
-      then
-      
-      read -p "enter the value of $selectedfieldforand : " selectedfieldvalueforand
-      array+=("$selectedfieldforand")
-      arrayval+=("$selectedfieldvalueforand")
-      break
-
-      else
-      echo "error ! this field dosen't exists "
-      deleteoptions
-      fi
-
-      done 
-
-      elif [[ $yn = n ]]
-        then
-        if [[ ${array[@]} = "" ]]
-          then
-        cp ./database/$dbName/$tableName/data_$tableName ./database/$dbName/$tableName/datatwo_$tableName
-        echo -n "" >./database/$dbName/$tableName/data_$tableName
-        sed  "/$selectedfieldvalue/d" ./database/$dbName/$tableName/datatwo_$tableName >>./database/$dbName/$tableName/data_$tableName
-        echo -n "" >./database/$dbName/$tableName/datatwo_$tableName
-        echo "delete records "
-        break
-
-      else
-        deletefunction
-      fi
-      else
-        echo "wrong input,start chose delete conditions again! "
-        deleterecord
-     fi
-    done
-   
+createTable(){
+  read -p "enter table name : " tableName
+  if [ -d ./database/$dbName/$tableName ]
+  then
+    echo "this name is already exists please try again"
+    createTable
   else
-    echo " can't delete ! $selectedfieldvalue is not found "
-    options
+    mkdir ./database/$dbName/$tableName
+    touch ./database/$dbName/$tableName/meta_$tableName
+    touch ./database/$dbName/$tableName/data_$tableName
+    #read -p "enter the primary key column name : " primarycol
+    read -p "enter the number of columns : " colNum
+
+    for i in $(seq $colNum)
+    do
+      read -p "enter the name of column $i : " colName
+      echo -n $colName >> ./database/$dbName/$tableName/meta_$tableName
+      datatypeSelect
+      constraintSelect
+    done
+    echo "$tableName table is created successfully"
+    echo "========================================="
   fi
-
 }
-
-deletefunction(){
- flagdelete=0
-  echo -n "$lines" > ./database/$dbName/$tableName/datathree_$tableName
-  catlines=$(cat ./database/$dbName/$tableName/datathree_$tableName | wc -l )
-if [[ $catlines=1 ]]
-  then 
-   
-   for i in ${arrayval[@]}
-    do
-      deleteline=$(sed -n "/$i/p" ./database/$dbName/$tableName/datathree_$tableName)
-      if [[ $deleteline = "" ]]
-       then
-       flagdelete=0
-       echo "cant delete that record ,no such record is matched "
-       break 
-      else
-       flagdelete=1
-  
-      fi
-    done
-   if [[ $flagdelete = 1 ]]
-   then 
-         cp ./database/$dbName/$tableName/data_$tableName ./database/$dbName/$tableName/datatwo_$tableName
-        echo -n "" >./database/$dbName/$tableName/data_$tableName
-        sed  "/$selectedfieldvalue/d" ./database/$dbName/$tableName/datatwo_$tableName >>./database/$dbName/$tableName/data_$tableName
-        echo -n "" >./database/$dbName/$tableName/datatwo_$tableName
-        echo "delete records "
-        
-   fi
-else
-    echo "hdwr b values w field"
-fi 
-
-  
-
-
-
-}
-
-
-deleteoptions(){
-
-  
-  echo "=============================="
-  echo " existing fields "
-  echo "$fields"
-  echo "=============================="
-  read -p "enter the name of field you want to use to delete record" selectedfield
-
-}
-
-options(){
-
- loop=1
-    while [ $loop -eq 1 ]
-    do
-    echo "===================="
-    echo "1-show tables"
-    echo "2-create new table"
-    echo "3-alter table"
-    echo "4-drop table "
-    echo "5-display description of a table"
-    echo "6-insert record"
-    echo "7-delete  record"
-    echo "00-back"
-
-
-    read -p "enter your choice: " choice
-
-    case $choice in
-    1)
-      showTables
-      ;;
-
-    2)
-      createTable
-      ;;
-
-    3)
-       alterTable
-       ;;
-
-    4)
-       showTables
-       droptable
-        ;;
-
-    5)
-      showTables
-      displaytable
-      ;;
-
-    6)
-      showTables
-     insertRecord
-     ;;
-   7)
-     showTables
-     selecttable
-     ;;
-
-   00)
-      loop=0
-      ;;
-
-    *)
-      echo wrong entry
-      ;;
-    esac
-    done
-
-}
-
-
 
 useDB(){
   showDB
@@ -602,11 +368,74 @@ useDB(){
     echo "not a valid existing database name please try again "
     useDB
   else
-   options
+    loop=1
+    while [ $loop -eq 1 ]
+    do
+    echo "===================="
+    echo "1-show tables"
+    echo "2-create new table"
+    echo "3-insert record"
+    echo "4-drop table "
+    echo "5-alter table"
+    echo "6- display discription of  a table"
+    echo "00-back"
+
+
+    read -p "enter your choice: " choice
+
+    case $choice in
+    1)
+      echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+      ;;
+
+    2)
+      createTable
+      ;;
+
+    3)
+      echo "======================="
+      echo "existing Tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+     
+     insertRecord
+     ;;
+
+    4)
+      echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+      droptable
+     ;;
+
+    5)
+     alterTable
+     ;;
+
+    6)
+      echo "======================="
+      echo "existing tables :"
+      echo $(ls ./database/$dbName)
+      echo "======================="
+     displaytable
+     ;;
+
+    00)
+      loop=0
+      ;;
+
+    *)
+      echo wrong entry
+      ;;
+    esac
+    done
   fi
 
 }
-
 dropDB(){
   showDB
   read -p "enter the database you want to delete : " dbName
